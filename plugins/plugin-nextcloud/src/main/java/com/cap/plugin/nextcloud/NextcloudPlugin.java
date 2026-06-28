@@ -72,18 +72,9 @@ public class NextcloudPlugin implements AppAuthPlugin {
 
     @Override
     public SsoResult ssoLogin(AppConfig config, SsoRequest request) {
+        // Nextcloud 不支持跨站 Web SSO，跳转到 NC 首页
+        // 浏览器记住 NC session cookie 后无需重复登录
         String baseUrl = config.getBaseUrl().replaceAll("/$", "");
-        String username = request.getUsername();
-        String password = request.getUserPassword();
-
-        if (username != null && password != null && !password.isEmpty()) {
-            Map<String, String> fields = new HashMap<>();
-            fields.put("user", username);
-            fields.put("password", password);
-            fields.put("timezone", "Asia/Shanghai");
-            return SsoResult.formPost(baseUrl + "/login", fields, baseUrl + "/apps/dashboard");
-        }
-
         return SsoResult.redirect(baseUrl + "/");
     }
 
