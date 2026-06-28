@@ -88,7 +88,7 @@ public class NextcloudPlugin implements AppAuthPlugin {
                 String pollToken = flow.path("poll").path("token").asText();
 
                 if (loginUrl != null && !loginUrl.isEmpty()) {
-                    String targetUrl = baseUrl + "/apps/files";
+                    String targetUrl = baseUrl + "/apps/dashboard";
                     return SsoResult.loginFlow(loginUrl, pollEndpoint, pollToken, targetUrl);
                 }
             }
