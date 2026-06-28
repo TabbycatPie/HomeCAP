@@ -70,8 +70,27 @@ public class NextcloudPlugin implements AppAuthPlugin {
 
     @Override
     public SsoResult ssoLogin(AppConfig config, SsoRequest request) {
-        String baseUrl = config.getBaseUrl().replaceAll("/$", "");
-        return SsoResult.redirect(baseUrl + "/");
+        try {
+            String baseUrl = config.getBaseUrl().replaceAll("/$", "");
+            HttpRequest flowReq = HttpRequest.newBuilder()
+                    .uri(URI.create(baseUrl + "/index.php/login/v2"))
+                    .header("Content-Type", "application/x-www-form-urlencoded")
+                    .POST(HttpRequest.BodyPublishers.ofString(""))
+                    .timeout(Duration.ofSeconds(5)).build();
+            HttpResponse<String> resp = httpClient.send(flowReq, HttpResponse.BodyHandlers.ofString());
+            if (resp.statusCode() == 200) {
+                JsonNode flow = mapper.readTree(resp.body());
+                String loginUrl = flow.path("login").asText();
+                String pollEndpoint = flow.path("poll").path("endpoint").asText();
+                String pollToken = flow.path("poll").path("token").asText();
+                if (!loginUrl.isEmpty()) {
+                    return SsoResult.loginFlow(loginUrl, pollEndpoint, pollToken, baseUrl + "/");
+                }
+            }
+            return SsoResult.error("HTTP " + resp.statusCode());
+        } catch (Exception e) {
+            return SsoResult.error(e.getClass().getSimpleName() + ": " + e.getMessage());
+        }
     }
 
     @Override
