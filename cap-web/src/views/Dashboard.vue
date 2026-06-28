@@ -55,14 +55,6 @@ onMounted(async () => {
 function handleAccess(app) {
   if (accessingId.value) return
   accessingId.value = app.appId
-
-  // Nextcloud: 已授权过就直接跳转（浏览器有 session cookie）
-  if (app.appType === 'nextcloud' && localStorage.getItem('nc_authorized')) {
-    accessingId.value = null
-    if (app.publicUrl) window.open(app.publicUrl, '_blank')
-    return
-  }
-
   ssoApi.access(app.appId)
     .then(r => {
       var t = localStorage.getItem('token')
