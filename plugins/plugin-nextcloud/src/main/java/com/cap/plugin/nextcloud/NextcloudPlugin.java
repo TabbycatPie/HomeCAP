@@ -76,11 +76,11 @@ public class NextcloudPlugin implements AppAuthPlugin {
         String username = request.getUsername();
         String password = request.getUserPassword();
 
-        // 用存储的密码通过 form_post 自动登录 Nextcloud
         if (username != null && password != null && !password.isEmpty()) {
-            Map<String, String> fields = new java.util.HashMap<>();
+            Map<String, String> fields = new HashMap<>();
             fields.put("user", username);
             fields.put("password", password);
+            fields.put("timezone", "Asia/Shanghai");
             return SsoResult.formPost(baseUrl + "/login", fields, baseUrl + "/apps/dashboard");
         }
 
