@@ -1,0 +1,77 @@
+/* DeepSeek 风格 — 大圆角、柔和、现代 */
+:root {
+  --ds-radius-sm: 8px;
+  --ds-radius-md: 12px;
+  --ds-radius-lg: 16px;
+  --ds-radius-xl: 20px;
+  --ds-radius-round: 30px;
+  --ds-color-primary: #409eff;
+  --ds-bg-page: #f5f7fa;
+  --ds-shadow-card: 0 2px 12px rgba(0,0,0,0.06);
+}
+
+/* Element Plus 全局覆盖 */
+.el-card {
+  border-radius: var(--ds-radius-lg) !important;
+  border: none !important;
+  box-shadow: var(--ds-shadow-card) !important;
+}
+
+.el-button {
+  border-radius: var(--ds-radius-round) !important;
+}
+
+.el-button--small {
+  border-radius: var(--ds-radius-md) !important;
+}
+
+.el-dialog {
+  border-radius: var(--ds-radius-lg) !important;
+}
+
+.el-dialog__header {
+  border-radius: var(--ds-radius-lg) var(--ds-radius-lg) 0 0 !important;
+}
+
+.el-input__wrapper {
+  border-radius: var(--ds-radius-md) !important;
+}
+
+.el-select .el-input__wrapper {
+  border-radius: var(--ds-radius-md) !important;
+}
+
+.el-table {
+  border-radius: var(--ds-radius-lg) !important;
+  overflow: hidden;
+}
+
+.el-tag {
+  border-radius: var(--ds-radius-sm) !important;
+}
+
+.el-switch__core {
+  border-radius: 12px !important;
+}
+
+.el-menu {
+  border-radius: 0 !important;
+}
+
+.el-alert {
+  border-radius: var(--ds-radius-md) !important;
+}
+
+.el-message {
+  border-radius: var(--ds-radius-md) !important;
+}
+
+/* 卡片内边距调整 */
+.el-card__body {
+  padding: 20px !important;
+}
+
+/* 表格圆角 */
+.el-table--striped .el-table__body tr.el-table__row--striped td {
+  background-color: #f8faff;
+}

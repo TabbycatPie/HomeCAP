@@ -1,0 +1,35 @@
+[Unit]
+Description=Central Auth Platform Server
+After=network.target mysql.service
+Wants=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/central-auth-platform
+ExecStart=/usr/bin/java -jar /root/central-auth-platform/cap-server/target/cap-server-1.0.0-SNAPSHOT.jar
+ExecStop=/bin/kill -15 $MAINPID
+Restart=on-failure
+RestartSec=10
+StandardOutput=append:/var/log/cap-server.log
+StandardError=append:/var/log/cap-server.log
+
+# 环境变量
+Environment=JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+Environment=SPRING_PROFILES_ACTIVE=production
+
+# 安全限制
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/root/central-auth-platform/cap-server/plugins
+ReadWritePaths=/root/central-auth-platform/cap-server/uploads
+ReadWritePaths=/var/log
+
+# 限制
+LimitNOFILE=65536
+LimitNPROC=4096
+
+[Install]
+WantedBy=multi-user.target
