@@ -56,7 +56,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/store/auth'
 import { ElMessage } from 'element-plus'
@@ -75,6 +75,19 @@ const rules = {
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
   password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
 }
+
+// 已登录 + 有 redirect 参数 → 直接跳到授权页，无需再输入密码
+onMounted(() => {
+  var hash = window.location.hash
+  var qi = hash.indexOf('?')
+  if (qi >= 0) {
+    var q = new URLSearchParams(hash.substring(qi + 1))
+    var redirect = q.get('redirect')
+    if (redirect && authStore.isLoggedIn) {
+      window.location.href = decodeURIComponent(redirect)
+    }
+  }
+})
 
 async function handleLogin() {
   const valid = await formRef.value?.validate().catch(() => false)
