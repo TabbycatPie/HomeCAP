@@ -34,6 +34,10 @@ public class SecurityConfig {
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/.well-known/**").permitAll()
+                .requestMatchers("/api/oidc/authorize").permitAll()
+                .requestMatchers("/api/oidc/token").permitAll()
+                .requestMatchers("/api/oidc/jwks").permitAll()
                 .requestMatchers("/api/sso/go/**").permitAll()
                 .requestMatchers("/api/sso/poll/**").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")

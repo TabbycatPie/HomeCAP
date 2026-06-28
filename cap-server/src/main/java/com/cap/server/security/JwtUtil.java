@@ -13,14 +13,18 @@ import java.util.Date;
 public class JwtUtil {
 
     private final SecretKey key;
+    private final String secret;
     private final long expirationMs;
 
     public JwtUtil(@Value("${app.jwt.secret}") String secret,
                    @Value("${app.jwt.expiration-ms}") long expirationMs) {
         byte[] keyBytes = Base64.getDecoder().decode(secret);
         this.key = Keys.hmacShaKeyFor(keyBytes);
+        this.secret = secret;
         this.expirationMs = expirationMs;
     }
+
+    public String getSecret() { return secret; }
 
     public String generateToken(Long userId, String username, String role) {
         return Jwts.builder()

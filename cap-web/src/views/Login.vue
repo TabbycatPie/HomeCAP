@@ -84,6 +84,17 @@ async function handleLogin() {
   try {
     await authStore.login(form.username, form.password)
     ElMessage.success('登录成功')
+    // OIDC redirect 支持 — hash 路由下从 hash 中取参数
+    var hash = window.location.hash
+    var qi = hash.indexOf('?')
+    if (qi >= 0) {
+      var q = new URLSearchParams(hash.substring(qi + 1))
+      var redirect = q.get('redirect')
+      if (redirect) {
+        window.location.href = decodeURIComponent(redirect)
+        return
+      }
+    }
     router.push('/dashboard')
   } catch {
     // 错误已由拦截器处理
