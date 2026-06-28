@@ -12,6 +12,8 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Base64;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * Nextcloud 认证插件
@@ -70,36 +72,19 @@ public class NextcloudPlugin implements AppAuthPlugin {
 
     @Override
     public SsoResult ssoLogin(AppConfig config, SsoRequest request) {
-        try {
-            String baseUrl = config.getBaseUrl().replaceAll("/$", "");
-            String userPassword = request.getUserPassword();
+        String baseUrl = config.getBaseUrl().replaceAll("/$", "");
+        String username = request.getUsername();
+        String password = request.getUserPassword();
 
-            // 有存储的 appPassword → 直接生成登录 URL（无需 Login Flow）
-            if (userPassword != null && !userPassword.isEmpty() && userPassword.length() > 20) {
-                return SsoResult.redirect(baseUrl + "/?user=" + encode(request.getUsername())
-                        + "&password=" + encode(userPassword));
-            }
-
-            // 首次登录 → Login Flow v2
-            HttpRequest flowReq = HttpRequest.newBuilder()
-                    .uri(URI.create(baseUrl + "/index.php/login/v2"))
-                    .header("Content-Type", "application/x-www-form-urlencoded")
-                    .POST(HttpRequest.BodyPublishers.ofString(""))
-                    .timeout(Duration.ofSeconds(5)).build();
-            HttpResponse<String> resp = httpClient.send(flowReq, HttpResponse.BodyHandlers.ofString());
-            if (resp.statusCode() == 200) {
-                JsonNode flow = mapper.readTree(resp.body());
-                String loginUrl = flow.path("login").asText();
-                String pollEndpoint = flow.path("poll").path("endpoint").asText();
-                String pollToken = flow.path("poll").path("token").asText();
-                if (!loginUrl.isEmpty()) {
-                    return SsoResult.loginFlow(loginUrl, pollEndpoint, pollToken, baseUrl + "/");
-                }
-            }
-            return SsoResult.error("HTTP " + resp.statusCode());
-        } catch (Exception e) {
-            return SsoResult.error(e.getClass().getSimpleName() + ": " + e.getMessage());
+        // 用存储的密码通过 form_post 自动登录 Nextcloud
+        if (username != null && password != null && !password.isEmpty()) {
+            Map<String, String> fields = new java.util.HashMap<>();
+            fields.put("user", username);
+            fields.put("password", password);
+            return SsoResult.formPost(baseUrl + "/login", fields, baseUrl + "/apps/dashboard");
         }
+
+        return SsoResult.redirect(baseUrl + "/");
     }
 
     @Override
