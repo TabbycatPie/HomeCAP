@@ -36,7 +36,7 @@ public class SsoController {
             // 注册 poll session，返回 pollId
             String pollId = ssoService.registerPollSession(
                     result.getPollEndpoint(), result.getPollToken(),
-                    result.getTargetUrl());
+                    result.getTargetUrl(), jwtUser.getId(), appId);
             return ResponseEntity.ok(Map.of(
                     "mode", "login_flow",
                     "loginUrl", result.getRedirectUrl(),
@@ -79,7 +79,7 @@ public class SsoController {
             // 注册 poll session
             String pollId = ssoService.registerPollSession(
                     result.getPollEndpoint(), result.getPollToken(),
-                    result.getTargetUrl());
+                    result.getTargetUrl(), userId, appId);
             return loginFlowPage(result.getRedirectUrl(), pollId, result.getTargetUrl());
         }
 
@@ -99,7 +99,12 @@ public class SsoController {
     public ResponseEntity<?> poll(@PathVariable String pollId) {
         SsoService.PollResult r = ssoService.proxyPoll(pollId);
         if (r.success) {
-            return ResponseEntity.ok(Map.of("success", true, "targetUrl", r.targetUrl));
+            var result = new java.util.HashMap<String, Object>();
+            result.put("success", true);
+            result.put("targetUrl", r.targetUrl);
+            result.put("appPassword", r.appPassword);
+            result.put("loginName", r.loginName);
+            return ResponseEntity.ok(result);
         }
         return ResponseEntity.ok(Map.of("success", false, "message", r.message));
     }

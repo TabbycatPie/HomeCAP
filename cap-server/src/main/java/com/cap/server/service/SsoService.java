@@ -109,11 +109,10 @@ public class SsoService {
     }
 
     /** 注册 Login Flow 轮询会话 */
-    public String registerPollSession(String pollEndpoint, String pollToken, String targetUrl) {
+    public String registerPollSession(String pollEndpoint, String pollToken, String targetUrl, Long userId, Long appId) {
         String pollId = java.util.UUID.randomUUID().toString().substring(0, 16);
-        // 生成内网代理 URL（用于后端轮询，不走公网）
         String internalEndpoint = toInternalPollUrl(pollEndpoint);
-        pollSessions.put(pollId, new PollSession(pollEndpoint, internalEndpoint, pollToken, targetUrl, System.currentTimeMillis()));
+        pollSessions.put(pollId, new PollSession(pollEndpoint, internalEndpoint, pollToken, targetUrl, System.currentTimeMillis(), userId, appId));
 
         log.info("注册 Poll: {} (pub={}, int={})", pollId, pollEndpoint, internalEndpoint);
         return pollId;
@@ -152,9 +151,16 @@ public class SsoService {
             if (resp.statusCode() == 200 && resp.body() != null && !resp.body().isEmpty()) {
                 var json = mapper.readTree(resp.body());
                 if (json.has("server") && json.has("loginName")) {
-                    log.info("Poll 成功: {} → 已登录 {}", pollId, json.path("loginName").asText());
+                    String appPassword = json.has("appPassword") ? json.path("appPassword").asText() : null;
+                    String loginName = json.path("loginName").asText();
+                    log.info("Poll 成功: {} → 已登录 {} (appPassword={})", pollId, loginName,
+                            appPassword != null ? appPassword.substring(0, Math.min(8, appPassword.length())) + "..." : "none");
+                    // 存储 appPassword 到权限记录，下次直接登录
+                    if (appPassword != null && session.userId != null && session.appId != null) {
+                        permissionService.updateAppPassword(session.userId, session.appId, appPassword);
+                    }
                     pollSessions.remove(pollId);
-                    return new PollResult(true, "login success", session.targetUrl);
+                    return new PollResult(true, "login success", session.targetUrl, appPassword, loginName);
                 }
                 log.debug("Poll {} 返回了 200 但未包含 server/loginName: {}", pollId, resp.body());
                 return new PollResult(false, "waiting", null);
@@ -215,13 +221,20 @@ public class SsoService {
         final String pollToken;
         final String targetUrl;
         final long createdAt;
+        final Long userId;
+        final Long appId;
 
         PollSession(String original, String internal, String token, String targetUrl, long createdAt) {
+            this(original, internal, token, targetUrl, createdAt, null, null);
+        }
+        PollSession(String original, String internal, String token, String targetUrl, long createdAt, Long userId, Long appId) {
             this.originalPollEndpoint = original;
             this.internalPollEndpoint = internal;
             this.pollToken = token;
             this.targetUrl = targetUrl;
             this.createdAt = createdAt;
+            this.userId = userId;
+            this.appId = appId;
         }
     }
 
@@ -229,8 +242,14 @@ public class SsoService {
         public final boolean success;
         public final String message;
         public final String targetUrl;
+        public final String appPassword;
+        public final String loginName;
         public PollResult(boolean success, String message, String targetUrl) {
+            this(success, message, targetUrl, null, null);
+        }
+        public PollResult(boolean success, String message, String targetUrl, String appPassword, String loginName) {
             this.success = success; this.message = message; this.targetUrl = targetUrl;
+            this.appPassword = appPassword; this.loginName = loginName;
         }
     }
 }

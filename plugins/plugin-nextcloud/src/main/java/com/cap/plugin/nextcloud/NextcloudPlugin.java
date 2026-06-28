@@ -72,6 +72,15 @@ public class NextcloudPlugin implements AppAuthPlugin {
     public SsoResult ssoLogin(AppConfig config, SsoRequest request) {
         try {
             String baseUrl = config.getBaseUrl().replaceAll("/$", "");
+            String userPassword = request.getUserPassword();
+
+            // 有存储的 appPassword → 直接生成登录 URL（无需 Login Flow）
+            if (userPassword != null && !userPassword.isEmpty() && userPassword.length() > 20) {
+                return SsoResult.redirect(baseUrl + "/?user=" + encode(request.getUsername())
+                        + "&password=" + encode(userPassword));
+            }
+
+            // 首次登录 → Login Flow v2
             HttpRequest flowReq = HttpRequest.newBuilder()
                     .uri(URI.create(baseUrl + "/index.php/login/v2"))
                     .header("Content-Type", "application/x-www-form-urlencoded")

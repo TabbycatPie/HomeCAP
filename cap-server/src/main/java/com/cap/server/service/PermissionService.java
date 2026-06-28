@@ -136,6 +136,15 @@ public class PermissionService {
         return permissionRepository.existsByUserIdAndAppIdAndStatus(userId, appId, "enabled");
     }
 
+    /** 更新用户在 App 中的密码（如 NC Login Flow 返回的 appPassword） */
+    public void updateAppPassword(Long userId, Long appId, String newPassword) {
+        permissionRepository.findByUserIdAndAppId(userId, appId).ifPresent(perm -> {
+            perm.setAppUserPassword(newPassword);
+            permissionRepository.save(perm);
+            log.info("已更新用户 {} 在 App[{}] 的密码", userId, appId);
+        });
+    }
+
     /** 获取用户在某 App 中的登录密码 */
     public Optional<String> getAppPassword(Long userId, Long appId) {
         return permissionRepository.findByUserIdAndAppId(userId, appId)
