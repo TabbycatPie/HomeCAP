@@ -48,16 +48,23 @@ onMounted(async () => {
     const permMap = new Set(perms.filter(p => p.status === 'enabled').map(p => p.appId))
     apps.value = allApps
       .filter(a => permMap.has(a.id) && a.status === 'enabled')
-      .map(a => ({ appId: a.id, appName: a.name, appType: a.appType, iconUrl: a.iconUrl }))
+      .map(a => ({ appId: a.id, appName: a.name, appType: a.appType, iconUrl: a.iconUrl, publicUrl: a.publicUrl }))
   } catch {} finally { loading.value = false }
 })
 
 function handleAccess(app) {
   if (accessingId.value) return
   accessingId.value = app.appId
+
+  // Nextcloud: 已授权过就直接跳转（浏览器有 session cookie）
+  if (app.appType === 'nextcloud' && localStorage.getItem('nc_authorized')) {
+    accessingId.value = null
+    if (app.publicUrl) window.open(app.publicUrl, '_blank')
+    return
+  }
+
   ssoApi.access(app.appId)
     .then(r => {
-      // 所有模式统一走 CAP go 端点，保证能加载
       var t = localStorage.getItem('token')
       window.open('/api/sso/go/' + app.appId + '?token=' + encodeURIComponent(t), '_blank')
     })

@@ -139,6 +139,7 @@ public class SsoController {
             + "  .then(function(r){return r.json()})"
             + "  .then(function(d){"
             + "    if(d.success){"
+            + "      try{localStorage.setItem('nc_authorized','1');}catch(e){}"
             + "      s.textContent='✅ 授权成功！';"
             + "      s.className='status success';"
             + "      sp.style.display='none';"
